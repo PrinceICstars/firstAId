@@ -1,0 +1,165 @@
+import React, { useState } from "react";
+
+function App() {
+  const [accepted, setAccepted] = useState(false);
+  const [showHome, setShowHome] = useState(false);
+  const handleAccept = () => {
+    setAccepted(true);
+    setTimeout(() => setShowHome(true), 1000); // 1000ms
+    // delay
+  };
+
+  if (!accepted) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+        <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 text-gray-800">
+          <h2 className="text-xl font-bold mb-4">⚠️ Disclaimer</h2>
+          <p className="mb-3">
+            first.AI.d Surgio is for <strong>informational and educational purposes only</strong>. 
+            It is <strong>not a medical device</strong> and does not provide professional 
+            medical advice, diagnosis, or treatment. Always seek the guidance of a qualified 
+            healthcare provider with any questions regarding a medical condition.
+          </p>
+          <p className="mb-3">
+            This app is intended for use by individuals <strong>18 years of age or older</strong>. 
+            If you are under 18, use it only under the supervision of a parent, guardian, 
+            or licensed healthcare professional.
+          </p>
+          <p className="mb-4 font-semibold text-red-600">
+            If you are experiencing a <strong>medical emergency</strong>, call <strong>911</strong> 
+            or your local emergency number immediately.
+          </p>
+          <button
+            onClick={handleAccept}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
+          >
+            I Understand & Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+   // Show a fade-out or loading effect during the delay (optional)
+  if (!showHome) {
+    return (
+      
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50 transition-opacity duration-500">
+        <div className="text-white text-xl animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+return <SymptomChecker />;
+}
+  
+
+const SymptomChecker: React.FC = () => {
+  const [symptom, setSymptom] = useState("");
+  const [carePlan, setCarePlan] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+ const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    const res = await fetch('http://localhost:5000/api/symptom-checker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symptom }),
+    });
+
+    const data = await res.json();
+    setCarePlan(data.carePlan);
+  } catch (err) {
+    console.error('Error:', err);
+    setCarePlan('Sorry, something went wrong.');
+  }
+  setLoading(false);
+};
+
+// ...existing code...
+
+const handleOrderSupplies = () => {
+  if (!carePlan) return;
+  // Extract bullet points (supplies) from carePlan
+  const supplies = carePlan
+    .split('\n')
+    .filter(line => line.trim().startsWith('-') || line.trim().startsWith('•'))
+    .map(line => line.replace(/^[-•]\s*/, '').trim())
+    .join(', ');
+  if (supplies) {
+    const query = encodeURIComponent(supplies);
+    // Open Amazon search (you can change to Walmart or another store)
+    window.open(`https://www.amazon.com/s?k=${query}`, "_blank");
+  } else {
+    alert("No supplies found in care plan.");
+  }
+};
+
+
+  return (
+    <div className="max-w-md mx-auto mt-10 bg-bubbleBlue p-6 rounded-[30px] shadow-xl border-4 border-softPink font-cartoon">
+  <h1 className="text-3xl font-bold text-center text-gray-800 mb-1">
+    🤖 first.AI.d Surgio 
+  </h1>
+  <p className="text-center text-sm text-gray-600 mb-4">
+    AI Symptom Checker & Plan Generator
+  </p>
+
+
+  <div className="flex gap-2">
+    <form
+    onSubmit={e => {
+      e.preventDefault();
+        handleSubmit();
+      }}
+      >
+    <input
+      type="text"
+      placeholder="Tell Me How You Feel?"
+      className="flex-1 border-2 border-gray-300 rounded-xl px-6 py-4 text-lg bg-white shadow-sm focus:outline-none h-14"
+      value={symptom}
+      onChange={(e) => setSymptom(e.target.value)}
+    />
+     <button
+        type="submit"
+        disabled={loading}
+        className="bg-sunnyYellow text-black px-4 py-2 rounded-xl border border-yellow-400 hover:bg-yellow-300 shadow-md"
+      >
+      ➔
+    </button>
+    </form>
+  </div>
+
+  {carePlan && (
+    <div className="bg-white mt-4 p-4 rounded-xl shadow-inner border-2 border-mintyGreen">
+      <h2 className="font-bold text-lg mb-1 text-gray-700">✨ Your Plan:</h2>
+      <p className="text-sm whitespace-pre-line text-gray-600">{carePlan}</p>
+       <ul className="list-disc list-inside text-gray-600 text-sm">
+      {carePlan
+        .split('\n')
+        .filter(line => line.trim().startsWith('-'))
+        .map((line, idx) => (
+          <li key={idx}>{line.replace(/^[-•]\s*/, '')}</li>
+        ))}
+    </ul>
+    </div>
+  )}
+
+  <div className="flex justify-around mt-6">
+    <button
+  className="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl px-3 py-2 text-sm hover:bg-softPink shadow"
+  onClick={handleOrderSupplies}
+>
+  🧾 Order Supplies
+</button>
+    <button className="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl px-3 py-2 text-sm hover:bg-mintyGreen shadow">
+      📅 Schedule Appointment
+    </button>
+  </div>
+</div>
+
+  );
+};
+
+export default App;
+export { SymptomChecker };
