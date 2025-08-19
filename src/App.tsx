@@ -61,17 +61,100 @@ const SymptomChecker: React.FC = () => {
  const handleSubmit = async () => {
   setLoading(true);
   try {
-    const res = await fetch('http://localhost:5000/api/symptom-checker', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symptom }),
-    });
+    // Check if we're in production (GitHub Pages) or development
+    const isProduction = window.location.hostname === 'princeicstars.github.io';
+    
+    if (isProduction) {
+      // Demo mode for GitHub Pages
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+      
+      const demoResponses = {
+        'headache': `🎯 **Headache Care Plan**
 
-    const data = await res.json();
-    setCarePlan(data.carePlan);
+• Stay hydrated - drink plenty of water
+• Rest in a quiet, dark room
+• Apply cold compress to forehead
+• Take over-the-counter pain relief if needed
+• Avoid bright lights and loud sounds
+
+**Medical Supplies:**
+- Cold compress or ice pack
+- Electrolyte drinks
+- Ibuprofen or acetaminophen
+- Eye mask for darkness`,
+        
+        'fever': `🎯 **Fever Care Plan**
+
+• Monitor temperature every 2-4 hours
+• Rest and get plenty of sleep
+• Drink fluids to prevent dehydration
+• Take fever-reducing medication as directed
+• Wear light, breathable clothing
+
+**Medical Supplies:**
+- Digital thermometer
+- Fever reducer (acetaminophen/ibuprofen)
+- Electrolyte drinks
+- Cooling towels`,
+        
+        'cough': `🎯 **Cough Care Plan**
+
+• Stay hydrated with warm liquids
+• Use honey to soothe throat (not for children under 1)
+• Elevate head while sleeping
+• Avoid irritants like smoke
+• Humidify the air
+
+**Medical Supplies:**
+- Humidifier
+- Honey
+- Throat lozenges
+- Cough drops
+- Herbal teas`,
+        
+        'default': `🎯 **General Wellness Plan**
+
+• Rest and get adequate sleep
+• Stay hydrated
+• Eat nutritious foods
+• Monitor symptoms
+• Consult healthcare provider if symptoms worsen
+
+**Medical Supplies:**
+- Digital thermometer
+- Basic first aid kit
+- Electrolyte drinks
+- Pain relievers (as appropriate)
+
+*This is a demo. For real symptoms, please consult a healthcare professional.*`
+      };
+      
+      // Find matching response or use default
+      const symptomLower = symptom.toLowerCase();
+      let response = demoResponses.default;
+      
+      for (const [key, value] of Object.entries(demoResponses)) {
+        if (key !== 'default' && symptomLower.includes(key)) {
+          response = value;
+          break;
+        }
+      }
+      
+      setCarePlan(response);
+    } else {
+      // Development mode - try to connect to local backend
+      const res = await fetch('http://localhost:5000/api/symptom-checker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptom }),
+      });
+
+      const data = await res.json();
+      setCarePlan(data.carePlan);
+    }
   } catch (err) {
     console.error('Error:', err);
-    setCarePlan('Sorry, something went wrong.');
+    setCarePlan('⚠️ Demo mode: This is a sample response. For real medical advice, please consult a healthcare professional.');
   }
   setLoading(false);
 };
