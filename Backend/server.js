@@ -2,7 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { OpenAI } from 'openai';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Load .env file from the Backend directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '.env') });
 
 
 const app = express();
@@ -25,7 +32,7 @@ app.post('/api/symptom-checker', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful, kind virtual assistant for medical symptom care. Avoid diagnosis. Suggest reaching out to a professional if needed. Keep it concise and friendly. Suggest a list of medical supplies that might help with the symptom. Visualize the care plan in a simple, easy-to-follow format. Use bullet points for clarity. render bullets in a column. suggested medical supplies should be at the bottom',
+          content: 'You are a helpful, kind virtual assistant for medical symptom care. Avoid diagnosis. Suggest reaching out to a professional if needed. Keep it concise and friendly. Suggest a list of medical supplies that might help with the symptom. Visualize the care plan in a simple, easy-to-follow format. Use bullet points for clarity. render bullets in a column. suggested medical supplies should be at the bottom also add links to videos to help the user understand the care plan better.',
         },
         {
           role: 'user',

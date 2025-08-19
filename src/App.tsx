@@ -65,11 +65,35 @@ const SymptomChecker: React.FC = () => {
     const isProduction = window.location.hostname === 'princeicstars.github.io';
     
     if (isProduction) {
-      // Demo mode for GitHub Pages
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+      // Production mode - connect to deployed backend
+      // Update this URL to your deployed backend
+      const PRODUCTION_API_URL = 'https://your-backend-url.vercel.app'; // Replace with your actual backend URL
       
-      const demoResponses = {
-        'headache': `🎯 **Headache Care Plan**
+      const res = await fetch(`${PRODUCTION_API_URL}/api/symptom-checker`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptom }),
+      });
+
+      const data = await res.json();
+      setCarePlan(data.carePlan);
+    } else {
+      // Development mode - connect to local backend
+      const res = await fetch('http://localhost:5000/api/symptom-checker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptom }),
+      });
+
+      const data = await res.json();
+      setCarePlan(data.carePlan);
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    
+    // Fallback to demo mode if backend is unavailable
+    const demoResponses = {
+      'headache': `🎯 **Headache Care Plan**
 
 • Stay hydrated - drink plenty of water
 • Rest in a quiet, dark room
@@ -82,8 +106,8 @@ const SymptomChecker: React.FC = () => {
 - Electrolyte drinks
 - Ibuprofen or acetaminophen
 - Eye mask for darkness`,
-        
-        'fever': `🎯 **Fever Care Plan**
+      
+      'fever': `🎯 **Fever Care Plan**
 
 • Monitor temperature every 2-4 hours
 • Rest and get plenty of sleep
@@ -96,8 +120,8 @@ const SymptomChecker: React.FC = () => {
 - Fever reducer (acetaminophen/ibuprofen)
 - Electrolyte drinks
 - Cooling towels`,
-        
-        'cough': `🎯 **Cough Care Plan**
+      
+      'cough': `🎯 **Cough Care Plan**
 
 • Stay hydrated with warm liquids
 • Use honey to soothe throat (not for children under 1)
@@ -111,8 +135,8 @@ const SymptomChecker: React.FC = () => {
 - Throat lozenges
 - Cough drops
 - Herbal teas`,
-        
-        'default': `🎯 **General Wellness Plan**
+      
+      'default': `🎯 **General Wellness Plan**
 
 • Rest and get adequate sleep
 • Stay hydrated
@@ -126,35 +150,21 @@ const SymptomChecker: React.FC = () => {
 - Electrolyte drinks
 - Pain relievers (as appropriate)
 
-*This is a demo. For real symptoms, please consult a healthcare professional.*`
-      };
-      
-      // Find matching response or use default
-      const symptomLower = symptom.toLowerCase();
-      let response = demoResponses.default;
-      
-      for (const [key, value] of Object.entries(demoResponses)) {
-        if (key !== 'default' && symptomLower.includes(key)) {
-          response = value;
-          break;
-        }
+*Backend unavailable - showing demo response. For real symptoms, please consult a healthcare professional.*`
+    };
+    
+    // Find matching response or use default
+    const symptomLower = symptom.toLowerCase();
+    let response = demoResponses.default;
+    
+    for (const [key, value] of Object.entries(demoResponses)) {
+      if (key !== 'default' && symptomLower.includes(key)) {
+        response = value;
+        break;
       }
-      
-      setCarePlan(response);
-    } else {
-      // Development mode - try to connect to local backend
-      const res = await fetch('http://localhost:5000/api/symptom-checker', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symptom }),
-      });
-
-      const data = await res.json();
-      setCarePlan(data.carePlan);
     }
-  } catch (err) {
-    console.error('Error:', err);
-    setCarePlan('⚠️ Demo mode: This is a sample response. For real medical advice, please consult a healthcare professional.');
+    
+    setCarePlan(response);
   }
   setLoading(false);
 };
